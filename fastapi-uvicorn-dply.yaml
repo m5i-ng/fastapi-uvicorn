@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: fastapi-uvicorn
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "fastapi-uvicorn"
+    tags.datadoghq.com/version: "0.1"
+  name: fastapi-uvicorn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-uvicorn
+  template:
+    metadata:
+      annotations:
+        # https://docs.datadoghq.com/tracing/trace_collection/library_injection/?tab=kubernetes#container-registries
+        admission.datadoghq.com/fastapi-uvicorn.python-lib.version: "v1.18.4"
+        ad.datadoghq.com/fastapi-uvicorn.logs: '[{"source": "python"}]'
+      labels:
+        admission.datadoghq.com/enabled: "true"
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "fastapi-uvicorn"
+        tags.datadoghq.com/version: "0.1"
+        app: fastapi-uvicorn
+    spec:
+      containers:
+      - name: fastapi-uvicorn
+        image: min499/py-fastapi-uvicorn:0.1
+        imagePullPolicy: Always
+        env:
+        - name: DD_LOGS_INJECTION
+          value: "true"
+        - name: DD_RUNTIME_METRICS_ENABLED
+          value: "true"
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: "0.3"
+          requests:
+            memory: 64Mi
+            cpu: "0.1"
